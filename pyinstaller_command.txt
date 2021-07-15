@@ -1,0 +1,1 @@
+pyinstaller -F -n "yt-downloader" --add-data "moviepy;moviepy" "main.py"
