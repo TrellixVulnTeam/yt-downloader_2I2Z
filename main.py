@@ -128,6 +128,8 @@ def downPlaylist(vtype):
     listName = playlist.title
     print("Accessing playlist: " + listName)
 
+    listName = re.sub('[\\/:"\'*?<>|.,%#$+!`&{}@=]+', "", listName)
+
     try:
         os.mkdir(listName)
     except:
