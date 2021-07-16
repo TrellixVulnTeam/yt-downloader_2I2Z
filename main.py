@@ -181,7 +181,7 @@ def main():
     # Find if user would like to download 1 file or many files using playlist
     dtype = (input("Would you like to download video's through YouTube playlists? [yes for playlist, no for single video, leave empty for spotify download]\n") or 's')
 
-    if dtype[0].lower() not in ['y','n']:
+    if dtype[0].lower() in ['y','n']:
         vidtype = (input("Would you like to download as a video or audio or high res video? [v or a or h]\n") or 'a')
         replace_type_string = (input('Lastly, would you like to replace spaces in the file name with "_" (underscores)?\n') or 'n')
 
