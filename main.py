@@ -34,8 +34,12 @@ def downloader(video, vtype):
 
         fname = re.sub('[\\/:"\'*?<>|.,%#$+!`&{}@=]+', "", fname)
 
+        rep = ' '
+
         if replace_type == 1:
             fname = re.sub(' ', "_", fname)
+            rep = '_'
+
 
         fname = re.sub('\([^)]*\)', "", fname)
 
@@ -88,32 +92,38 @@ def downloader(video, vtype):
             chosenDownload.download(filename=fname, max_retries=5)
             print("Finished Download")
 
-            if chosenDownload.mime_type == 'video/webm':
-                print("Downloading audio")
+            file_types = {
+                'video/webm': '.webm',
+                'video/mp4': '.mp4',
+            }
 
-                # Choose Stream - audio
-                chosenDownload = yt.streams.get_audio_only('webm')
-                print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
+            fending = file_types[chosenDownload.mime_type]
 
-                # Download audio
-                chosenDownload.download(filename=fname + '1', max_retries=5)
-                print("Finished Download, Combining files")
+            print("Downloading audio")
 
-                input_video = ffmpeg.input(fname + '.webm')
-                merged_audio = ffmpeg.input(fname + '1.webm')
+            # Choose Stream - audio
+            chosenDownload = yt.streams.get_audio_only('webm')
+            print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
 
-                # Combine Files
-                time.sleep(2)
-                (
-                    ffmpeg
-                    .concat(input_video, merged_audio, v=1, a=1)
-                    .output(fname + ".mp4")
-                    .run(overwrite_output=True, cmd='ffmpeg.exe')
-                )
+            # Download audio
+            chosenDownload.download(filename=fname + '1', max_retries=5)
+            print("Finished Download, Combining files")
 
-                # Remove Extras
-                os.remove(fname + '.webm')
-                os.remove(fname + '1.webm')
+            input_video = ffmpeg.input(fname + fending)
+            merged_audio = ffmpeg.input(fname + '1.webm')
+
+            # Combine Files
+            time.sleep(2)
+            (
+                ffmpeg
+                .concat(input_video, merged_audio, v=1, a=1)
+                .output(fname + rep + "full.mp4")
+                .run(overwrite_output=True, cmd='ffmpeg.exe')
+            )
+
+            # Remove Extras
+            os.remove(fname + fending)
+            os.remove(fname + '1.webm')
 
         print("Link to thumbnail: \n" + yt.thumbnail_url)
     except:
