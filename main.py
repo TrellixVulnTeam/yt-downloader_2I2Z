@@ -20,104 +20,105 @@ def clear():
 
 def downloader(video, vtype):
     global total_errors, titles, replace_type
-    # try:
-    # Get video and title
-    yt = YouTube(video)
-    vidtitle = yt.title
-    print("\n" + str(len(titles) + 1) + ". Found Video: " + vidtitle)
+    try:
+        # Get video and title
+        yt = YouTube(video)
+        vidtitle = yt.title
+        print("\n" + str(len(titles) + 1) + ". Found Video: " + vidtitle)
 
-    # Get file name
-    fname = re.sub(yt.author + " ", "", vidtitle)
+        # Get file name
+        fname = re.sub(yt.author + " ", "", vidtitle)
 
-    if '-' in re.sub("^(?:\w+\s+){3}([^\n\r]+)$", "", fname) and vtype == 'a':
-        fname = re.sub('^[^-]*- ', "", fname)
+        if '-' in re.sub("^(?:\w+\s+){3}([^\n\r]+)$", "", fname) and vtype == 'a':
+            fname = re.sub('^[^-]*- ', "", fname)
 
-    fname = re.sub('[\\/:"\'*?<>|.,%#$+!`&{}@=]+', "", fname)
+        fname = re.sub('[\\/:"\'*?<>|.,%#$+!`&{}@=]+', "", fname)
 
-    if replace_type == 1:
-        fname = re.sub(' ', "_", fname)
+        if replace_type == 1:
+            fname = re.sub(' ', "_", fname)
 
-    fname = re.sub('\([^)]*\)', "", fname)
+        fname = re.sub('\([^)]*\)', "", fname)
 
-    if 'ft' in fname:
-        fname = re.sub('ft[^|]*', "", fname)
+        if 'ft' in fname:
+            fname = re.sub('ft[^|]*', "", fname)
 
-    if fname[-1] == '_':
-        fname = fname[:-1]
-    if fname[0] == '_':
-        fname = fname[0:]
+        if fname[-1] == '_':
+            fname = fname[:-1]
+        if fname[0] == '_':
+            fname = fname[0:]
 
-    fname = fname.strip()
-    fname = fname.strip('_')
+        fname = fname.strip()
+        fname = fname.strip('_')
 
-    print('File name will be: ' + fname)
+        print('File name will be: ' + fname)
 
-    titles.append(fname)
+        titles.append(fname)
 
-    if vtype == 'a':
-        # Choose Stream
-        chosenDownload = yt.streams.get_audio_only()
-        print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
-
-        # Download Vid
-        chosenDownload.download(filename=fname, max_retries=5)
-        print("Finished Download, converting to mp3 file")
-
-        # Convert from mp4 to mp3
-        video = AudioFileClip(fname + '.mp4')
-        video.write_audiofile(fname + '.mp3')
-        print("Finished Conversion")
-        os.remove(fname + '.mp4')
-        print("Removed mp4")
-    elif vtype == 'v':
-        # Choose Stream
-        chosenDownload = yt.streams.get_highest_resolution()
-        print("Located highest resolution video stream for video: '" + vidtitle + "'. Downloading now...")
-
-        # Download Vid
-        chosenDownload.download(filename=fname, max_retries=5)
-        print("Finished Download")
-    elif vtype == 'h':
-        # Choose Stream - video
-        chosenDownload = yt.streams.filter(only_video=True).first()
-        print("Located highest resolution video stream for video: '" + vidtitle + "'. Downloading now...")
-        print('Stream is: ' + str(chosenDownload))
-
-        # Download Vid
-        chosenDownload.download(filename=fname, max_retries=5)
-        print("Finished Download")
-
-        if chosenDownload.mime_type == 'video/webm':
-            print("Downloading audio")
-
-            # Choose Stream - audio
-            chosenDownload = yt.streams.get_audio_only('webm')
+        if vtype == 'a':
+            # Choose Stream
+            chosenDownload = yt.streams.get_audio_only()
             print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
 
-            # Download audio
-            chosenDownload.download(filename=fname + '1', max_retries=5)
-            print("Finished Download, Combining files")
+            # Download Vid
+            chosenDownload.download(filename=fname, max_retries=5)
+            print("Finished Download, converting to mp3 file")
 
-            input_video = ffmpeg.input(fname + '.webm')
-            merged_audio = ffmpeg.input(fname + '1.webm')
+            # Convert from mp4 to mp3
+            video = AudioFileClip(fname + '.mp4')
+            video.write_audiofile(fname + '.mp3')
+            print("Finished Conversion")
+            os.remove(fname + '.mp4')
+            print("Removed mp4")
+        elif vtype == 'v':
+            # Choose Stream
+            chosenDownload = yt.streams.get_highest_resolution()
+            print("Located highest resolution video stream for video: '" + vidtitle + "'. Downloading now...")
 
-            # Combine Files
-            time.sleep(2)
-            (
-                ffmpeg
-                .concat(input_video, merged_audio, v=1, a=1)
-                .output(fname + ".mp4")
-                .run(overwrite_output=True, cmd='ffmpeg.exe')
-            )
+            # Download Vid
+            chosenDownload.download(filename=fname, max_retries=5)
+            print("Finished Download")
+        elif vtype == 'h':
+            fname = fname.strip('-')
+            # Choose Stream - video
+            chosenDownload = yt.streams.filter(only_video=True).first()
+            print("Located highest resolution video stream for video: '" + vidtitle + "'. Downloading now...")
+            print('Stream is: ' + str(chosenDownload))
 
-            # Remove Extras
-            os.remove(fname + '.webm')
-            os.remove(fname + '1.webm')
+            # Download Vid
+            chosenDownload.download(filename=fname, max_retries=5)
+            print("Finished Download")
 
-    print("Link to thumbnail: \n" + yt.thumbnail_url)
-    # except:
-    #     print("Error downloading, possible forbidden download")
-    #     total_errors += 1
+            if chosenDownload.mime_type == 'video/webm':
+                print("Downloading audio")
+
+                # Choose Stream - audio
+                chosenDownload = yt.streams.get_audio_only('webm')
+                print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
+
+                # Download audio
+                chosenDownload.download(filename=fname + '1', max_retries=5)
+                print("Finished Download, Combining files")
+
+                input_video = ffmpeg.input(fname + '.webm')
+                merged_audio = ffmpeg.input(fname + '1.webm')
+
+                # Combine Files
+                time.sleep(2)
+                (
+                    ffmpeg
+                    .concat(input_video, merged_audio, v=1, a=1)
+                    .output(fname + ".mp4")
+                    .run(overwrite_output=True, cmd='ffmpeg.exe')
+                )
+
+                # Remove Extras
+                os.remove(fname + '.webm')
+                os.remove(fname + '1.webm')
+
+        print("Link to thumbnail: \n" + yt.thumbnail_url)
+    except:
+        print("Error downloading, possible forbidden download")
+        total_errors += 1
 
     print("\n")
 
@@ -180,6 +181,8 @@ def main():
 
     # Find if user would like to download 1 file or many files using playlist
     dtype = (input("Would you like to download video's through YouTube playlists? [yes for playlist, no for single video, leave empty for spotify download]\n") or 's')
+
+    replace_type_string = 'n'
 
     if dtype[0].lower() in ['y','n']:
         vidtype = (input("Would you like to download as a video or audio or high res video? [v or a or h]\n") or 'a')
