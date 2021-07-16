@@ -107,7 +107,7 @@ def downloader(video, vtype):
                 ffmpeg
                 .concat(input_video, merged_audio, v=1, a=1)
                 .output(fname + ".mp4")
-                .run(overwrite_output=True)
+                .run(overwrite_output=True, cmd='ffmpeg.exe')
             )
 
             # Remove Extras
@@ -179,18 +179,30 @@ def main():
     global replace_type
 
     # Find if user would like to download 1 file or many files using playlist
-    dtype = (input("Would you like to download video's through YouTube playlists? [yes for playlist, no for single video]\n") or 'n')
-    vidtype = (input("Would you like to download as a video or audio or high res video? [v or a or h]\n") or 'a')
-    replace_type_string = (input('Lastly, would you like to replace spaces in the file name with "_" (underscores)?\n') or 'n')
+    dtype = (input("Would you like to download video's through YouTube playlists? [yes for playlist, no for single video, leave empty for spotify download]\n") or 's')
+
+    if dtype[0].lower() not in ['y','n']:
+        vidtype = (input("Would you like to download as a video or audio or high res video? [v or a or h]\n") or 'a')
+        replace_type_string = (input('Lastly, would you like to replace spaces in the file name with "_" (underscores)?\n') or 'n')
 
     if replace_type_string[0].lower() == 'y':
         replace_type = 1
 
     if dtype[0].lower() == 'y':
         downPlaylist(vidtype[0].lower())
-    else:
+    elif dtype[0].lower() == 'n':
         vidurl = input("Enter link to youtube video\nlink: ")
         downloader(vidurl, vidtype[0].lower())
+    else:
+        link = input("Link: \n")
+        try:
+            command = ("spotdl " + link + " --ffmpeg ffmpeg.exe")
+            os.system('cmd /c "' + command + '"')
+            os.remove('.cache')
+        except:
+            print("Error getting spotify track")
+            print("To use this feature you must have spotify downloader installed:\nhttps://github.com/spotDL/spotify-downloader")
+            time.sleep(10)
 
 
 print("====================")
