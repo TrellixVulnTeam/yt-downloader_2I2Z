@@ -71,7 +71,14 @@ def downloader(video, vtype):
             video = AudioFileClip(fname + '.mp4')
             video.write_audiofile(fname + '.mp3')
             print("Finished Conversion")
-            os.remove(fname + '.mp4')
+
+            try:
+                os.remove(fname + '.mp4')
+            except PermissionError:
+                print('MP4 file is being used by anouther process, retrying delete')
+                time.sleep(10)
+                os.remove(fname + '.mp4')
+
             print("Removed mp4")
         elif vtype == 'v':
             # Choose Stream
@@ -158,11 +165,10 @@ def downPlaylist(vtype):
 
     try:
         if get_thumb[0].lower() == 'y':
-            lname = 'thumbnail.png'
+            lname = (listName + '.png')
             data = requests.get(url)
             with open(lname, 'wb')as file:
                 file.write(data.content)
-
             os.rename(lname, listName + "/" + lname)
             print("Downloaded thumbnail")
     except:
