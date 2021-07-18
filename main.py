@@ -3,7 +3,7 @@ import os, re, time, requests, ffmpeg
 from moviepy.editor import *
 from pytube import *
 
-total_errors = 0
+total_errors = [0]
 titles = []
 replace_type = 0
 
@@ -135,7 +135,8 @@ def downloader(video, vtype):
         print("Link to thumbnail: \n" + yt.thumbnail_url)
     except:
         print("Error downloading, possible forbidden download")
-        total_errors += 1
+        total_errors[0] += 1
+        total_errors.append(video)
 
     print("\n")
 
@@ -179,7 +180,9 @@ def downPlaylist(vtype):
         downloader(video, vtype)
 
     global titles, total_errors
-    print("\n"*3 + "Finished Downloading from playlist with a total error count of " + str(total_errors) + ", moving to playlist folder now")
+    print("\n"*3 + "Finished Downloading. Total errors: ")
+    print(total_errors)
+    print("Moving to playlist folder now...")
 
     # Move files
     # Find file ending
@@ -188,11 +191,16 @@ def downPlaylist(vtype):
         'v': '.mp4',
     }
 
+    mov_errors = []
     for n in titles:
         try:
             os.rename(n + f_end[vtype], listName + "/" + n + ".mp3")
         except:
             print("Error Moving a File")
+            mov_errors.append(n)
+
+    print('All moving errors:')
+    print(mov_errors)
 
     print("Finished")
 
