@@ -189,7 +189,10 @@ def downPlaylist(vtype):
     }
 
     for n in titles:
-        os.rename(n + f_end[vtype], listName + "/" + n + ".mp3")
+        try:
+            os.rename(n + f_end[vtype], listName + "/" + n + ".mp3")
+        except:
+            print("Error Moving a File")
 
     print("Finished")
 
