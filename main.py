@@ -1,7 +1,11 @@
 # Youtube Audio Downloader
-import os, re, time, requests, ffmpeg
+import os, re, time, requests, ffmpeg, colorama
+from urllib.error import HTTPError, URLError
+
 from moviepy.editor import *
 from pytube import *
+
+colorama.init()
 
 total_errors = [0]
 titles = []
@@ -20,128 +24,143 @@ def clear():
 
 def downloader(video, vtype):
     global total_errors, titles, replace_type
-    # try:
-    # Get video and title
-    yt = YouTube(video)
-    vidtitle = yt.title
-    print("\n" + str(len(titles) + 1) + ". Found Video: " + vidtitle)
 
-    # Get file name
-    fname = re.sub(yt.author + " ", "", vidtitle)
+    print("\033[1;34;40m")
 
-    if '-' in re.sub("^(?:\w+\s+){3}([^\n\r]+)$", "", fname) and vtype == 'a':
-        fname = re.sub('^[^-]*- ', "", fname)
+    try:
+        # Get video and title
+        yt = YouTube(video)
+        vidtitle = yt.title
+        print("\n" + str(len(titles) + 1) + ". Found Video: " + vidtitle)
 
-    fname = re.sub('[\\/:"\'*?<>|.,%#$+!`&{}@=]+', "", fname)
+        # Get file name
+        fname = re.sub(yt.author + " ", "", vidtitle)
 
-    rep = ' '
+        if '-' in re.sub("^(?:\w+\s+){3}([^\n\r]+)$", "", fname) and vtype == 'a':
+            fname = re.sub('^[^-]*- ', "", fname)
 
-    if replace_type == 1:
-        fname = re.sub(' ', "_", fname)
-        rep = '_'
+        fname = re.sub('[\\/:"\'*?<>|.,%#$+!`&{}@=]+', "", fname)
+
+        rep = ' '
+
+        if replace_type == 1:
+            fname = re.sub(' ', "_", fname)
+            rep = '_'
 
 
-    fname = re.sub('\([^)]*\)', "", fname)
+        fname = re.sub('\([^)]*\)', "", fname)
 
-    if 'ft' in fname:
-        fname = re.sub('ft[^|]*', "", fname)
+        if 'ft' in fname:
+            fname = re.sub('ft[^|]*', "", fname)
 
-    if fname[-1] == '_':
-        fname = fname[:-1]
-    if fname[0] == '_':
-        fname = fname[0:]
+        if fname[-1] == '_':
+            fname = fname[:-1]
+        if fname[0] == '_':
+            fname = fname[0:]
 
-    fname = fname.strip()
-    fname = fname.strip('_')
+        fname = fname.strip()
+        fname = fname.strip('_')
 
-    print('File name will be: ' + fname)
+        print('File name will be: ' + fname)
 
-    titles.append(fname)
+        titles.append(fname)
 
-    if vtype == 'a':
-        # Choose Stream
-        chosenDownload = yt.streams.get_audio_only('mp4')
-        print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
+        if vtype == 'a':
+            # Choose Stream
+            chosenDownload = yt.streams.get_audio_only()
+            print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
 
-        # Download Vid
-        chosenDownload.download(filename=fname, max_retries=5)
-        print("Finished Download, converting to mp3 file")
+            # Download Vid
+            chosenDownload.download(filename=fname + '.mp4', max_retries=5)
+            print("Finished Download, converting to mp3 file")
 
-        # Convert from mp4 to mp3
-        video = AudioFileClip(fname + '.mp4')
-        video.write_audiofile(fname + '.mp3')
-        print("Finished Conversion")
+            # Convert from mp4 to mp3
+            video = AudioFileClip(fname + '.mp4')
 
-        try:
-            os.remove(fname + '.mp4')
-        except PermissionError:
-            print('MP4 file is being used by anouther process, retrying delete')
-            time.sleep(10)
-            os.remove(fname + '.mp4')
+            print("\033[1;31;40m")
+            video.write_audiofile(fname + '.mp3')
+            print("\033[1;34;40m")
 
-        print("Removed mp4")
-    elif vtype == 'v':
-        # Choose Stream
-        chosenDownload = yt.streams.get_highest_resolution()
-        print("Located highest resolution video stream for video: '" + vidtitle + "'. Downloading now...")
+            print("Finished Conversion")
 
-        # Download Vid
-        chosenDownload.download(filename=fname, max_retries=5)
-        print("Finished Download")
-    elif vtype == 'h':
-        fname = fname.strip('-')
-        # Choose Stream - video
-        chosenDownload = yt.streams.filter(only_video=True).first()
-        print("Located highest resolution video stream for video: '" + vidtitle + "'. Downloading now...")
-        print('Stream is: ' + str(chosenDownload))
+            try:
+                os.remove(fname + '.mp4')
+            except PermissionError:
+                print('MP4 file is being used by another process, retrying delete')
+                time.sleep(10)
+                os.remove(fname + '.mp4')
 
-        # Download Vid
-        chosenDownload.download(filename=fname, max_retries=5)
-        print("Finished Download")
+            print("Removed mp4")
+        elif vtype == 'v':
+            # Choose Stream
+            chosenDownload = yt.streams.get_highest_resolution()
+            print("Located highest resolution video stream for video: '" + vidtitle + "'. Downloading now...")
 
-        file_types = {
-            'video/webm': '.webm',
-            'video/mp4': '.mp4',
-        }
+            # Download Vid
+            chosenDownload.download(filename=fname + ".mp4", max_retries=5)
+            print("Finished Download")
+        elif vtype == 'h':
+            fname = fname.strip('-')
+            # Choose Stream - video
+            chosenDownload = yt.streams.filter(only_video=True).first()
+            print("Located highest resolution video stream for video: '" + vidtitle + "'. Downloading now...")
+            print('Stream is: ' + str(chosenDownload))
 
-        fending = file_types[chosenDownload.mime_type]
+            file_types = {
+                'video/webm': '.webm',
+                'video/mp4': '.mp4',
+            }
+            fending = file_types[chosenDownload.mime_type]
 
-        print("Downloading audio")
+            # Download Vid
+            chosenDownload.download(filename=fname+fending, max_retries=5)
+            print("Finished Download")
 
-        # Choose Stream - audio
-        chosenDownload = yt.streams.get_audio_only('webm')
-        print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
 
-        # Download audio
-        chosenDownload.download(filename=fname + '1', max_retries=5)
-        print("Finished Download, Combining files")
+            print("Downloading audio")
 
-        input_video = ffmpeg.input(fname + fending)
-        merged_audio = ffmpeg.input(fname + '1.webm')
+            # Choose Stream - audio
+            chosenDownload = yt.streams.get_audio_only('webm')
+            print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
 
-        # Combine Files
-        time.sleep(2)
-        (
-            ffmpeg
-            .concat(input_video, merged_audio, v=1, a=1)
-            .output(fname + rep + "full.mp4")
-            .run(overwrite_output=True, cmd='ffmpeg.exe')
-        )
+            # Download audio
+            chosenDownload.download(filename=fname + '1.webm', max_retries=5)
+            print("Finished Download, Combining files")
 
-        # Remove Extras
-        os.remove(fname + fending)
-        os.remove(fname + '1.webm')
+            input_video = ffmpeg.input(fname + fending)
+            merged_audio = ffmpeg.input(fname + '1.webm')
 
-    print("Link to thumbnail: \n" + yt.thumbnail_url)
-    # except:
-    #     print("Error downloading, possible forbidden download")
-    #     total_errors[0] += 1
-    #     total_errors.append(video)
+            # Combine Files
+            print("\033[1;37;40m")
+            time.sleep(2)
+            (
+                ffmpeg
+                .concat(input_video, merged_audio, v=1, a=1)
+                .output(fname + ".mp4")
+                .run(overwrite_output=True, cmd='ffmpeg.exe')
+            )
+
+            # Remove Extras
+            os.remove(fname + fending)
+            os.remove(fname + '1.webm')
+
+        print("Link to thumbnail: \n" + yt.thumbnail_url)
+    except (HTTPError, SyntaxError, OSError) as err:
+        print("Error downloading: {}".format(err))
+        total_errors[0] += 1
+        total_errors.append(video)
+    except URLError:
+        print("Old connection was forcibly closed, to fix this, restart the program...")
+        time.sleep(10)
+        quit()
 
     print("\n")
 
 
 def downPlaylist(vtype):
+
+    print("\033[1;35;40m")
+
     playlist = Playlist(input("Link to Playlist: \n"))
     listName = playlist.title
     print("Accessing playlist: " + listName)
@@ -208,6 +227,8 @@ def downPlaylist(vtype):
 def main():
     global replace_type
 
+    print("\033[1;36;40m")
+
     # Find if user would like to download 1 file or many files using playlist
     dtype = (input("Would you like to download video's through YouTube playlists? [yes for playlist, no for single video, leave empty for spotify download]\n") or 's')
 
@@ -237,6 +258,7 @@ def main():
             time.sleep(10)
 
 
+print("\033[1;32;40m")
 print("====================")
 print("    By Rohan S.")
 print("====================")
@@ -244,6 +266,7 @@ main()
 
 x = 1
 while x == 1:
+    print("\033[1;31;40m")
     exit = (input("Type 'y' to exit, or just click enter to repeat...\n") or '  n')
 
     if exit[0].lower() == 'y':
