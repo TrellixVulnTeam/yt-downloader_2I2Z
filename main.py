@@ -113,7 +113,7 @@ def downloader(video, vtype):
             fending = file_types[chosenDownload.mime_type]
 
             # Download Vid
-            chosenDownload.download(filename=fname+fending, max_retries=5)
+            chosenDownload.download(filename=fname+'v'+fending, max_retries=5)
             print("Finished Download")
 
 
@@ -124,11 +124,11 @@ def downloader(video, vtype):
             print("Located highest bitrate audio stream for video: '" + vidtitle + "'. Downloading now...")
 
             # Download audio
-            chosenDownload.download(filename=fname + '1.webm', max_retries=5)
+            chosenDownload.download(filename=fname + 'a.webm', max_retries=5)
             print("Finished Download, Combining files")
 
-            input_video = ffmpeg.input(fname + fending)
-            merged_audio = ffmpeg.input(fname + '1.webm')
+            input_video = ffmpeg.input(fname + 'v' + fending)
+            merged_audio = ffmpeg.input(fname + 'a.webm')
 
             # Combine Files
             print("\033[1;37;40m")
@@ -141,8 +141,8 @@ def downloader(video, vtype):
             )
 
             # Remove Extras
-            os.remove(fname + fending)
-            os.remove(fname + '1.webm')
+            os.remove(fname + 'v' + fending)
+            os.remove(fname + 'a.webm')
 
         print("Link to thumbnail: \n" + yt.thumbnail_url)
     except (HTTPError, SyntaxError, OSError) as err:
